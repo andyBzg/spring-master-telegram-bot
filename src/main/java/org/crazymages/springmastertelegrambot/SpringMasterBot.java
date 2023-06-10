@@ -39,11 +39,10 @@ public class SpringMasterBot extends TelegramLongPollingBot {
     @Override
     public void onUpdateReceived(@NotNull Update update) {
         SendMessage message;
-        if (update.hasMessage() && update.getMessage().hasText()) {
-            message = commandResponseService.handleIncomingCommand(update);
+        if (update.hasMessage() && update.getMessage().hasText() && update.hasCallbackQuery()) {
+            message = commandResponseService.handleTextCommand(update);
             executeSendMessage(message);
         } else if (update.hasCallbackQuery()) {
-            //TODO объеденить или оптимизировать
             String callbackQuery = update.getCallbackQuery().getData();
             message = commandResponseService.handleButtonCommand(update, callbackQuery);
             executeSendMessage(message);

@@ -23,7 +23,7 @@ public class CommandResponseServiceImpl implements CommandResponseService {
     }
 
     @Override
-    public SendMessage handleIncomingCommand(Update update) {
+    public SendMessage handleTextCommand(Update update) {
         String receivedMessage = update.getMessage().getText();
         Long chatId = update.getMessage().getChatId();
         String firstName = update.getMessage().getFrom().getFirstName();
@@ -33,6 +33,19 @@ public class CommandResponseServiceImpl implements CommandResponseService {
         message.setChatId(chatId);
 
         return getBotReplyMessage(receivedMessage, chatId, firstName, userName, message);
+    }
+
+    @Override
+    public SendMessage handleButtonCommand(Update update, String callbackQuery) {
+        SendMessage message = new SendMessage();
+
+        String callbackData = update.getCallbackQuery().getData();
+        long chatId = update.getCallbackQuery().getMessage().getChatId();
+        String firstName = update.getCallbackQuery().getFrom().getFirstName();
+        String userName = update.getCallbackQuery().getFrom().getUserName();
+        message.setChatId(chatId);
+
+        return getBotReplyMessage(callbackData, chatId, firstName, userName, message);
     }
 
     private SendMessage getBotReplyMessage(String receivedMessage, Long chatId, String firstName, String userName, SendMessage message) {
@@ -54,19 +67,6 @@ public class CommandResponseServiceImpl implements CommandResponseService {
             default -> log.info("Unexpected message");
         }
         return message;
-    }
-
-    @Override
-    public SendMessage handleButtonCommand(Update update, String callbackQuery) {
-        SendMessage message = new SendMessage();
-
-        String callbackData = update.getCallbackQuery().getData();
-        long chatId = update.getCallbackQuery().getMessage().getChatId();
-        String firstName = update.getCallbackQuery().getFrom().getFirstName();
-        String userName = update.getCallbackQuery().getFrom().getUserName();
-        message.setChatId(chatId);
-
-        return getBotReplyMessage(callbackData, chatId, firstName, userName, message);
     }
 
 }

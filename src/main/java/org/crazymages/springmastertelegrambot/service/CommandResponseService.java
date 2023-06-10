@@ -5,7 +5,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 
 public interface CommandResponseService {
 
-    SendMessage handleIncomingCommand(Update update);
+    SendMessage handleTextCommand(Update update);
 
     SendMessage handleButtonCommand(Update update, String callbackQuery);
 }
