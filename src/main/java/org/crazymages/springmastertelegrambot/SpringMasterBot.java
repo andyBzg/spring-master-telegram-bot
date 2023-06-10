@@ -2,11 +2,8 @@ package org.crazymages.springmastertelegrambot;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
-import org.crazymages.springmastertelegrambot.buttons.Buttons;
 import org.crazymages.springmastertelegrambot.config.BotConfig;
-import org.crazymages.springmastertelegrambot.database.UserDatabaseService;
-import org.crazymages.springmastertelegrambot.entity.User;
-import org.crazymages.springmastertelegrambot.enums.Text;
+import org.crazymages.springmastertelegrambot.service.CommandResponseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -19,13 +16,13 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 public class SpringMasterBot extends TelegramLongPollingBot {
 
     private final BotConfig config;
-    private final UserDatabaseService userDatabaseService;
+    private final CommandResponseService commandResponseService;
 
 
     @Autowired
-    public SpringMasterBot(BotConfig config, UserDatabaseService userDatabaseService) {
+    public SpringMasterBot(BotConfig config, CommandResponseService commandResponseService) {
         this.config = config;
-        this.userDatabaseService = userDatabaseService;
+        this.commandResponseService = commandResponseService;
     }
 
 
@@ -41,40 +38,16 @@ public class SpringMasterBot extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(@NotNull Update update) {
+        SendMessage message;
         if (update.hasMessage() && update.getMessage().hasText()) {
-            String receivedMessage = update.getMessage().getText();
-            long chatId = update.getMessage().getChatId();
-            String firstName = update.getMessage().getFrom().getFirstName();
-            String userName = update.getMessage().getFrom().getUserName();
-
-            handleCommand(receivedMessage, chatId, firstName, userName);
+            message = commandResponseService.handleIncomingCommand(update);
+            executeSendMessage(message);
         } else if (update.hasCallbackQuery()) {
-            handleButtonCallback(update);
+            //TODO объеденить или оптимизировать
+            String callbackQuery = update.getCallbackQuery().getData();
+            message = commandResponseService.handleButtonCommand(update, callbackQuery);
+            executeSendMessage(message);
         }
-    }
-
-    public void handleButtonCallback(Update update) {
-        String callbackData = update.getCallbackQuery().getData();
-        long chatId = update.getCallbackQuery().getMessage().getChatId();
-        String firstName = update.getCallbackQuery().getFrom().getFirstName();
-        String userName = update.getCallbackQuery().getFrom().getUserName();
-
-        handleCommand(callbackData, chatId, firstName, userName);
-    }
-
-    public void startBot(long chatId, String firstName) {
-        SendMessage message = new SendMessage();
-        message.setChatId(chatId);
-        message.setText(String.format(Text.START_TEXT, firstName));
-        message.setReplyMarkup(Buttons.inlineKeyboardMarkup());
-        executeSendMessage(message);
-    }
-
-    public void sendHelpText(long chatId, String textToSend) {
-        SendMessage message = new SendMessage();
-        message.setChatId(chatId);
-        message.setText(textToSend);
-        executeSendMessage(message);
     }
 
     public void executeSendMessage(SendMessage message) {
@@ -86,23 +59,4 @@ public class SpringMasterBot extends TelegramLongPollingBot {
         }
     }
 
-    private void handleCommand(String receivedMessage, long chatId, String firstName, String userName) {
-
-        switch (receivedMessage) {
-            case "/start" -> startBot(chatId, firstName);
-            case "/help" -> sendHelpText(chatId, Text.HELP_TEXT);
-            case "/register" -> userDatabaseService.updateDB(chatId, firstName, userName);
-            case "/getmydata" -> getUserDataFromDB(chatId);
-            case "/deletemydata" -> userDatabaseService.deleteUser(chatId);
-            default -> log.info("Unexpected message");
-        }
-    }
-
-    private void getUserDataFromDB(long chatId) {
-        User user = userDatabaseService.getUserData(chatId);
-        SendMessage sendMessage = new SendMessage();
-        sendMessage.setChatId(chatId);
-        sendMessage.setText(user.toString());
-        executeSendMessage(sendMessage);
-    }
 }

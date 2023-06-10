@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -35,5 +36,17 @@ public class UserDatabaseServiceImpl implements UserDatabaseService {
         else {
             log.info("User is already registered.");
         }
+    }
+
+    @Override
+    public User getUserData(long chatId) {
+        Optional<User> optionalUser = userRepository.findById(chatId);
+        return optionalUser.orElseGet(User::new);
+    }
+
+    @Override
+    public void deleteUser(long chatId) {
+        userRepository.deleteById(chatId);
+        log.info("User deleted: " + chatId);
     }
 }

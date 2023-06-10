@@ -7,12 +7,15 @@ import java.sql.Timestamp;
 
 @Data
 @Entity
-@Table(name = "tg_bot_users")
+@Table(name = "tg_users")
 public class User {
 
     @Id
     @Column(name = "chat_id")
     private Long chatId;
+
+    @Column(name = "created_at")
+    private Timestamp createdAt;
 
     @Column(name = "firstname")
     private String firstName;
@@ -20,7 +23,6 @@ public class User {
     @Column(name = "username")
     private String userName;
 
-    @Column(name = "created_at")
-    private Timestamp createdAt;
+
 
 }
